@@ -4,14 +4,21 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
 
-        System.setProperty("java.util.logging.SimpleFormatter.format",
-                "[%1$tT] [%4$-7s] %5$s %n");
+        ThreadSafeStringBuilder safe = new ThreadSafeStringBuilder();
 
-        ThreadSafeStringBuilder threadSafe = new ThreadSafeStringBuilder();
+        for (int i = 0; i < 2; i++) {
+            new Thread(safe, "[Example1-thread-" + i+"]").start();
+            // INFO:  FINISH -> [Example1-thread-0] [Local-thread-safe[Example1-thread-0]]
+            // INFO:  FINISH -> [Example1-thread-1] [Local-thread-safe[Example1-thread-1]]
+        }
 
-        for (int i = 0; i < 3; i++) {
-            new Thread(threadSafe, "thread-" + i).start();            
-        }                
+        UnsafeStringBuilder unSafe = new UnsafeStringBuilder();
+
+        for (int i = 0; i < 2; i++) {
+            new Thread(unSafe, "[Example2-thread-" + i+"]").start();
+            // INFO:  FINISH -> [Example2-thread-1] [Local-thread-unsafe[Example2-thread-1]]
+            // INFO:  FINISH -> [Example2-thread-0] [Local-thread-unsafe[Example2-thread-1][Example2-thread-0]]
+        }
     }
 
 }

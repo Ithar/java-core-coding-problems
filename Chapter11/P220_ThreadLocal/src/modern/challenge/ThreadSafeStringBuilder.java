@@ -3,39 +3,30 @@ package modern.challenge;
 import java.util.Random;
 import java.util.logging.Logger;
 
-public class ThreadSafeStringBuilder implements Runnable {
+class ThreadSafeStringBuilder implements Runnable {
 
     private static final Logger logger = Logger.getLogger(ThreadSafeStringBuilder.class.getName());
-    private static final Random rnd = new Random();
 
-    private static final ThreadLocal<StringBuilder> threadLocal
-            = ThreadLocal.<StringBuilder>withInitial(() -> {
-                return new StringBuilder("Thread-safe ");
-            });
+    private static final ThreadLocal<StringBuilder> threadSafe = ThreadLocal.withInitial(() -> {
+        return new StringBuilder("Local-thread-safe"); // Creates a local instance only the current thread has access to
+    });
+
 
     @Override
     public void run() {
-        logger.info(() -> "-> " + Thread.currentThread().getName()
-                + " [" + threadLocal.get() + "]");
 
         try {
-            Thread.sleep(rnd.nextInt(2000));
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            logger.severe(() -> "Exception: " + ex);
+            Thread.sleep(new Random().nextInt(2000));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
-        // threadLocal.set(new StringBuilder(Thread.currentThread().getName()));
-        threadLocal.get().append(Thread.currentThread().getName());
+        // Here we got the String Builder, but each local Thread gets a local copy
+        threadSafe.get().append(Thread.currentThread().getName());
 
-        logger.info(() -> "-> " + Thread.currentThread().getName()
-                + " [" + threadLocal.get() + "]");
+        logger.info(() -> " FINISH -> " + Thread.currentThread().getName()+ " [" + threadSafe.get() + "]");
 
-        threadLocal.set(null);
-        // threadLocal.remove();
+        threadSafe.set(null);
 
-        logger.info(() -> "-> " + Thread.currentThread().getName()
-                + " [" + threadLocal.get() + "]");
     }
-
 }
